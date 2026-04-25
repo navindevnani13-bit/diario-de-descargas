@@ -1,8 +1,7 @@
-// Importamos solo lo que necesitamos de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// CONFIGURACIÓN: Pega aquí la URL de tu Firebase
+// Tu URL debe terminar en .firebaseio.com/
 const firebaseConfig = {
   databaseURL: "https://diario-de-descargas-default-rtdb.europe-west1.firebasedatabase.app/"
 };
@@ -10,7 +9,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Seleccionamos las tarjetas   
 const tarjetas = document.querySelectorAll('.card');
 
 tarjetas.forEach(tarjeta => {
@@ -20,22 +18,21 @@ tarjetas.forEach(tarjeta => {
     const btnDisminuir = tarjeta.querySelector('.disminuir');
     const btnReset = tarjeta.querySelector('.resetear');
 
-    // Referencia en la base de datos para este usuario
     const userRef = ref(db, 'contadores/' + nombre);
 
-    // ESCUCHAR CAMBIOS: Cuando alguien pulse un botón, se actualiza en TODOS los móviles
+    // Escuchar cambios de la nube
     onValue(userRef, (snapshot) => {
         const data = snapshot.val();
         valorDisplay.textContent = data !== null ? data : 0;
     });
 
-    // FUNCIONES PARA ACTUALIZAR
-    const cambiarValor = (delta) => {
-        const valorActual = parseInt(valorDisplay.textContent);
-        set(userRef, valorActual + delta);
+    // Actualizar en la nube
+    const actualizar = (cambio) => {
+        const valorActual = parseInt(valorDisplay.textContent) || 0;
+        set(userRef, valorActual + cambio);
     };
 
-    btnAumentar.onclick = () => cambiarValor(1);
-    btnDisminuir.onclick = () => cambiarValor(-1);
+    btnAumentar.onclick = () => actualizar(1);
+    btnDisminuir.onclick = () => actualizar(-1);
     btnReset.onclick = () => set(userRef, 0);
 });
