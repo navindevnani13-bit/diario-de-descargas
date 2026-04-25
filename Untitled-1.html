@@ -1,47 +1,38 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diario de Descargas</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    <h1>Diario de Descargas</h1>
+// Tu URL debe terminar en .firebaseio.com/
+const firebaseConfig = {
+  databaseURL: "https://diario-de-descargas-default-rtdb.europe-west1.firebasedatabase.app/"
+};
 
-    <div class="main-container">
-        <div class="card" data-user="Navin">
-            <h2>Navin</h2>
-            <span class="valor">0</span>
-            <div class="button-container">
-                <button class="btn disminuir">-</button>
-                <button class="btn resetear">Reset</button>
-                <button class="btn aumentar">+</button>
-            </div>
-        </div>
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-        <div class="card" data-user="Jiehao">
-            <h2>Jiehao</h2>
-            <span class="valor">0</span>
-            <div class="button-container">
-                <button class="btn disminuir">-</button>
-                <button class="btn resetear">Reset</button>
-                <button class="btn aumentar">+</button>
-            </div>
-        </div>
+const tarjetas = document.querySelectorAll('.card');
 
-        <div class="card" data-user="Iván">
-            <h2>Iván</h2>
-            <span class="valor">0</span>
-            <div class="button-container">
-                <button class="btn disminuir">-</button>
-                <button class="btn resetear">Reset</button>
-                <button class="btn aumentar">+</button>
-            </div>
-        </div>
-    </div>
+tarjetas.forEach(tarjeta => {
+    const nombre = tarjeta.getAttribute('data-user');
+    const valorDisplay = tarjeta.querySelector('.valor');
+    const btnAumentar = tarjeta.querySelector('.aumentar');
+    const btnDisminuir = tarjeta.querySelector('.disminuir');
+    const btnReset = tarjeta.querySelector('.resetear');
 
-    <script src="app.js"></script>
-</body>
-</html>
+    const userRef = ref(db, 'contadores/' + nombre);
+
+    // Escuchar cambios de la nube
+    onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        valorDisplay.textContent = data !== null ? data : 0;
+    });
+
+    // Actualizar en la nube
+    const actualizar = (cambio) => {
+        const valorActual = parseInt(valorDisplay.textContent) || 0;
+        set(userRef, valorActual + cambio);
+    };
+
+    btnAumentar.onclick = () => actualizar(1);
+    btnDisminuir.onclick = () => actualizar(-1);
+    btnReset.onclick = () => set(userRef, 0);
+});
